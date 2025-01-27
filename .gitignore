@@ -1,0 +1,36 @@
+# Ignore build directories
+build/
+Build/
+
+# Ignore Visual Studio-generated files
+.vscode/
+.vs/
+*.VC.db
+*.VC.VC.opendb
+*.sln
+*.vcxproj*
+*.user
+*.filters
+*.log
+*.ipch/
+*.obj/
+*.pch/
+*.tlog/
+*.idb
+*.ilk
+*.exp
+*.lib
+*.exe
+*.dll
+*.pdb
+
+# Ignore temporary files
+*.tmp
+*.log
+*.cache
+*.ninja_deps
+*.ninja_log
+
+# Ignore system files
+.DS_Store
+Thumbs.db
