@@ -18,23 +18,12 @@ inline bool IsWhitespace(int character)
 
 DirectoryProcessor::DirectoryProcessor()
 {
-    m_threads_count = std::thread::hardware_concurrency() - 1;
-    m_threads.reserve(m_threads_count);
+    set_threads_count(std::thread::hardware_concurrency() - 1);
 }
 
 DirectoryProcessor::DirectoryProcessor(int threads_count)
 {
-    if (threads_count <= 0 || threads_count > ((int)std::thread::hardware_concurrency() - 1))
-    {
-        m_threads_count = std::thread::hardware_concurrency() - 1;
-        throw std::invalid_argument("Invalid threads count. Setting to default value: " + std::to_string(m_threads_count));
-    }
-    else
-    {
-        m_threads_count = threads_count;
-    }
-
-    m_threads.reserve(m_threads_count);
+	set_threads_count(threads_count);
 }
 
 void DirectoryProcessor::ProcessDirectory(const std::string& root_path, ProcessFlags flags /*=DEFAULT*/)
@@ -53,22 +42,7 @@ void DirectoryProcessor::ProcessDirectory(const std::string& root_path, ProcessF
     m_general_code_stats.file_name = root_path;
     m_flags = flags;
 
-    for (const auto& entry : fs::recursive_directory_iterator(root_path)) 
-    {
-        if (!entry.is_regular_file())
-            continue;
-
-        std::string extension = entry.path().extension().string();
-
-        if (CheckExtensions(extension))
-        {
-            {
-                std::lock_guard<std::mutex> lock(m_queue_mutex);
-                m_files_queue.push(std::move(entry.path().string()));
-            }
-            m_cv.notify_one();
-        }
-    }
+	EnqueValidFiles(root_path);
 
     while (!m_files_queue.empty())
     {
@@ -166,6 +140,26 @@ void DirectoryProcessor::ProcessFile()
     }
 }
 
+void DirectoryProcessor::EnqueValidFiles(const std::string& root_path)
+{
+    for (const auto& entry : fs::recursive_directory_iterator(root_path))
+    {
+        if (!entry.is_regular_file())
+            continue;
+
+        std::string extension = entry.path().extension().string();
+
+        if (CheckExtensions(extension))
+        {
+            {
+                std::lock_guard<std::mutex> lock(m_queue_mutex);
+                m_files_queue.push(std::move(entry.path().string()));
+            }
+            m_cv.notify_one();
+        }
+    }
+}
+
 DirectoryProcessor::CodeStats DirectoryProcessor::get_general_stats()
 {
     if (m_flags == 0 || !m_isProccesed)
@@ -214,6 +208,21 @@ void DirectoryProcessor::WriteStats(const std::string& file_path)
             output << "Blank lines: " << stats.blank_lines << "\n";
         }
     }
+}
+
+void DirectoryProcessor::set_threads_count(int threads_count)
+{
+    if (threads_count <= 0 || threads_count > ((int)std::thread::hardware_concurrency() - 1))
+    {
+        m_threads_count = std::thread::hardware_concurrency() - 1;
+        throw std::invalid_argument("Invalid threads count. Setting to default value: " + std::to_string(m_threads_count));
+    }
+    else
+    {
+        m_threads_count = threads_count;
+    }
+
+    m_threads.reserve(m_threads_count);
 }
 
 bool DirectoryProcessor::CheckExtensions(const std::string& extension)

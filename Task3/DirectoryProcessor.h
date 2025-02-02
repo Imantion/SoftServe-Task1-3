@@ -37,17 +37,21 @@ public:
 	DirectoryProcessor(int threads_count);
 	~DirectoryProcessor() = default;
 
-	void ProcessDirectory(const std::string& root_path, ProcessFlags flags = DEFAULT);
+	virtual void ProcessDirectory(const std::string& root_path, ProcessFlags flags = DEFAULT);
 	
 	void WriteStats(const std::string& file_path);
 
+	void set_threads_count(int threads_count);
 	int get_threads_count() const { return m_threads_count; }
 
 	CodeStats get_general_stats();
-private:
+protected:
 	bool CheckExtensions(const std::string& extension);
+
 	virtual void ProcessFile();
-private:
+	virtual void EnqueValidFiles(const std::string& root_path);
+
+protected:
 
 	std::deque<CodeStats> m_code_stats;
 	std::queue<std::string> m_files_queue;
