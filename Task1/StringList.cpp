@@ -131,6 +131,22 @@ int StringListIndexOf(void** list, char* str)
 	return -1;
 }
 
+char* StringListGetElement(void** list, int index)
+{
+	void** iterator = list;
+
+	for (size_t i = 0; i <= index; i++)
+	{
+		if (iterator == NULL)
+			return NULL;
+
+		if (i == index)
+			return (char*)iterator[0];
+		
+		iterator = (void**)iterator[1];
+	}
+}
+
 void StringListRemoveDuplicates(void*** list)
 {
 	if (list == NULL)
@@ -203,10 +219,6 @@ void StringListSort(void*** list)
 		for (size_t j = 0; j < listSize - i - 1; j++)
 		{
 			void** nextIterator = (void**)iterator[1];
-
-			char* d = (char*)previous[0];
-			char* a = (char*)iterator[0];
-			char* b = (char*)nextIterator[0];
 
 			if (strcmp((char*)iterator[0], (char*)(nextIterator[0])) > 0)
 			{

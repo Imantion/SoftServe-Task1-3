@@ -76,6 +76,8 @@ std::variant<int, float, double, char, bool> VariantPrimitive::get_value() const
 		return m_bool;
 	case VariantPrimitive::Type::UNDEFINED:
 		throw std::runtime_error("Undefined type");
+	default:
+		throw std::runtime_error("Unknown type");
 	}
 }
 

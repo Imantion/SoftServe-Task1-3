@@ -2,7 +2,7 @@
 cmake_minimum_required(VERSION 3.17)
 
 # Set the project name
-project(VariantPrimitive)
+project(DirectoryProcessor)
 
 # Specify the C++ standard
 set(CMAKE_CXX_STANDARD 20)  # Use C++11, change if needed (e.g., 17, 20, etc.)
@@ -22,12 +22,12 @@ endif()
 # Add the executable target
 add_executable(${PROJECT_NAME}
     main.cpp       # The main program
-    VariantPrimitive.cpp # Implementation file for StringList
+    DirectoryProcessor.cpp # Implementation file for StringList
 )
 
 
 add_executable(testRunner
     test.cpp       # The main program
-    VariantPrimitive.cpp # Implementation file for StringList
+    DirectoryProcessor.cpp # Implementation file for StringList
 )
 target_link_libraries(testRunner gtest_main gmock_main)

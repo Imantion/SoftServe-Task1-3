@@ -22,6 +22,8 @@ int StringListSize(void** list);
 /* Returns the index position of the first occurrence of str in the list. */
 int StringListIndexOf(void** list, char* str);
 
+char* StringListGetElement(void** list, int index);
+
 /* Removes duplicate entries from the list. */
 void StringListRemoveDuplicates(void*** list);
 /* Replaces every occurrence of the before, in each of the string lists's strings, with after. */
