@@ -51,12 +51,30 @@ public:
 	}
 
 protected:
-	void** m_list = nullptr;
+	StringList m_list = nullptr;
 };
 
-TEST(StringListTest, TestStringListAdd)
+TEST(StringListTests, ExceptionsTest)
 {
-	void** list = nullptr;
+	EXPECT_THROW(StringListReplaceInStrings(nullptr, "before", "after"), std::invalid_argument);
+	EXPECT_THROW(StringListSort(nullptr), std::invalid_argument);
+	EXPECT_THROW(StringListSize(nullptr), std::invalid_argument);
+	EXPECT_THROW(StringListRemoveDuplicates(nullptr), std::invalid_argument);
+	EXPECT_THROW(StringListGetElement(nullptr, 0), std::invalid_argument);
+	EXPECT_THROW(StringListIndexOf(nullptr, "test"), std::invalid_argument);
+	EXPECT_THROW(StringListRemove(nullptr, "test"), std::invalid_argument);
+	EXPECT_THROW(StringListAdd(nullptr, "test"), std::invalid_argument);
+	EXPECT_THROW(StringListInit(nullptr), std::invalid_argument);
+
+	StringList list;
+	StringListInit(&list);
+	EXPECT_THROW(StringListGetElement(list, 1), std::out_of_range);
+	StringListDestroy(&list);
+}
+
+TEST(StringListTests, TestStringListAdd)
+{
+	StringList list = nullptr;
 	StringListInit(&list);
 	
 	StringListAdd(list, "Apple");
@@ -66,12 +84,12 @@ TEST(StringListTest, TestStringListAdd)
 	ASSERT_STREQ("Banana", StringListGetElement(list, 1));
 }
 
-TEST(StringListTest, TestStringListSorting)
+TEST(StringListTests, TestStringListSorting)
 {
-	void** list = nullptr;
+	StringList list = nullptr;
 	StringListInit(&list);
 	const char* str[] = { "ca", "ba", "ad", "ab", "da", "dd", "d", "cc" };
-	uint8_t amount = sizeof(str) / sizeof(void*);
+	uint8_t amount = sizeof(str) / sizeof(char*);
 	for (size_t i = 0; i < amount; i++)
 	{
 		StringListAdd(list, str[i]);
@@ -83,7 +101,7 @@ TEST(StringListTest, TestStringListSorting)
 
 	for (size_t i = 0; i < amount; i++)
 	{
-		EXPECT_STREQ(expected[i], StringListGetElement(list, i)) << "Mismatch at index " << i;
+		EXPECT_STREQ(expected[i], StringListGetElement(list, (int)i)) << "Mismatch at index " << i;
 	}
 
 
@@ -153,8 +171,14 @@ TEST_F(StringListTestFixture, TestStringListReplaceInStrings)
 	ASSERT_STREQ("yamogusrs", StringListGetElement(m_list, 7));
 	ASSERT_STREQ("northamogusst", StringListGetElement(m_list, 14));
 	ASSERT_STREQ("yamogust", StringListGetElement(m_list, 27));
-}
 
+	StringListReplaceInStrings(m_list, "ya", "bibi");
+	ASSERT_STREQ("bibimogusrs", StringListGetElement(m_list, 7));
+	ASSERT_STREQ("bibimogust", StringListGetElement(m_list, 27));
+
+	StringListReplaceInStrings(m_list, "srs", "HoI");
+	ASSERT_STREQ("bibimoguHoI", StringListGetElement(m_list, 7));
+}
 
 int main(int argc, char** argv)
 {

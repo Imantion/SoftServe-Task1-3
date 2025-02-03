@@ -25,6 +25,7 @@ public:
 	VariantPrimitive& operator=(const int& other);
 	VariantPrimitive& operator=(const float& other);
 	VariantPrimitive& operator=(const double& other);
+	bool operator==(const VariantPrimitive& other) const;
 
 	
 	std::variant<int, float, double, char, bool> get_value() const;

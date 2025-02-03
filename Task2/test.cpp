@@ -5,11 +5,18 @@
 TEST(VariantPrimitiveTest, DefaultConstructor)
 {
     VariantPrimitive vp;
+    VariantPrimitive other;
     ASSERT_THROW(vp.ToInt(), std::runtime_error);
     ASSERT_THROW(vp.ToFloat(), std::runtime_error);
     ASSERT_THROW(vp.ToDouble(), std::runtime_error);
     ASSERT_THROW(vp.ToChar(), std::runtime_error);
     ASSERT_THROW(vp.ToBool(), std::runtime_error);
+    ASSERT_THROW(vp = other, std::runtime_error);
+    ASSERT_THROW(vp == other, std::invalid_argument);
+    ASSERT_THROW(vp.get_value(), std::runtime_error);
+
+    other = 4;
+    ASSERT_THROW(vp == other, std::invalid_argument);
 }
 
 TEST(VariantPrimitiveTest, ConstructorAssignments)
@@ -121,8 +128,6 @@ TEST_P(VariantPrimitiveParameterizedTest, ParameterizedAssignment)
         vp = std::get<bool>(value);
         ASSERT_EQ(vp.ToBool(), std::get<bool>(value));
         break;
-    default:
-        FAIL() << "Unknown type";
     }
 }
 
@@ -138,3 +143,38 @@ INSTANTIATE_TEST_SUITE_P(
     )
 );
 
+class VariantPrimitiveCopyTest : public ::testing::TestWithParam<VariantPrimitive> {
+};
+
+TEST_P(VariantPrimitiveCopyTest, CopyConstuctorTest)
+{
+    VariantPrimitive vp(GetParam());
+
+    ASSERT_EQ(vp, GetParam());
+}
+
+TEST_P(VariantPrimitiveCopyTest, AssigmentTest)
+{
+    VariantPrimitive vp;
+    vp = GetParam();
+
+    ASSERT_EQ(vp, GetParam());
+}
+
+TEST_P(VariantPrimitiveCopyTest, CompareTest)
+{
+    VariantPrimitive vp(4);
+
+    ASSERT_NE(vp, GetParam());
+}
+
+
+INSTANTIATE_TEST_SUITE_P(
+    VariantAssigmentTest,
+    VariantPrimitiveCopyTest,
+    ::testing::Values(VariantPrimitive(2),
+                    VariantPrimitive(2.0f),
+                    VariantPrimitive(2.0),
+                    VariantPrimitive(true),
+                    VariantPrimitive('a'))
+);

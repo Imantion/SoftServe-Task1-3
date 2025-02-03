@@ -48,6 +48,28 @@ VariantPrimitive& VariantPrimitive::operator=(const double& other)
 	return *this;
 }
 
+bool VariantPrimitive::operator==(const VariantPrimitive& other) const
+{
+	if (m_type == Type::UNDEFINED || other.m_type == Type::UNDEFINED)
+		throw std::invalid_argument("VariantPrimitive::operator==");
+
+	if (m_type != other.m_type)
+		return false;
+
+	switch (other.m_type) {
+		case Type::BOOL:
+			return m_bool == other.m_bool;
+		case Type::CHAR:
+			return m_char == other.m_char;
+		case Type::INT:
+			return m_int == other.m_int;
+		case Type::FLOAT:
+			return m_float == other.m_float;
+		case Type::DOUBLE:
+			return m_double == other.m_double;
+	}
+}
+
 const char* VariantPrimitive::get_type(const Type& type) const
 {
 	switch (type) {
@@ -76,8 +98,6 @@ std::variant<int, float, double, char, bool> VariantPrimitive::get_value() const
 		return m_bool;
 	case VariantPrimitive::Type::UNDEFINED:
 		throw std::runtime_error("Undefined type");
-	default:
-		throw std::runtime_error("Unknown type");
 	}
 }
 
@@ -140,6 +160,7 @@ void VariantPrimitive::CopyUnion(const VariantPrimitive& other)
 	case Type::INT: m_int = other.m_int; break;
 	case Type::FLOAT: m_float = other.m_float; break;
 	case Type::DOUBLE: m_double = other.m_double; break;
+	case Type::UNDEFINED: throw std::runtime_error("Undefined type");
 	}
 }
 

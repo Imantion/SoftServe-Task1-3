@@ -1,250 +1,258 @@
 #include "StringList.h"
 
-void StringListInit(void*** list)
+#include <stdexcept>
+
+void StringListInit(StringList* list)
 {
-	if (list == NULL) return;
+    if (list == nullptr)
+        throw std::invalid_argument("List is null");
 
+    *list = (StringList)malloc(sizeof(void*) * 2);
 
-	*list = (void**)malloc(sizeof(void*) * 2);
-	(*list)[0] = NULL;
-	(*list)[1] = NULL;
+    if (*list == nullptr)
+        throw std::bad_alloc();
+
+    (*list)[DATA] = nullptr;
+    (*list)[NEXTPTR] = nullptr;
 }
 
-static void freeRecursive(void** pointer) {
-
-	if (pointer[1] != NULL)
-		freeRecursive((void**)pointer[1]);
-
-	free(pointer[0]);
-	free(pointer);
-}
-
-void StringListDestroy(void*** list)
+static void freeRecursive(StringList pointer)
 {
-	if (list == NULL) return;
-	
-	freeRecursive(*list);
+    if (pointer[NEXTPTR] != nullptr)
+        freeRecursive((StringList)pointer[NEXTPTR]);
 
-	*list = NULL;
+    free(pointer[DATA]);
+    free(pointer);
 }
 
-/* Inserts value at the end of the list */
-void StringListAdd(void** list, const char* str) {
-
-	if (list == NULL) 
-		throw "List is not intialized";
-
-	if (list[0] == NULL)
-	{
-		list[0] = _strdup(str);
-		return;
-	}
-
-	void** iterator = list;
-	while (iterator[1] != NULL)
-	{
-		iterator = (void**)iterator[1];
-	}
-	
-	void** next = (void**)malloc(sizeof(void*) * 2);
-
-	next[0] = _strdup(str);
-	next[1] = NULL;
-
-	iterator[1] = next;
-}
-
-void StringListRemove(void*** list, const char* str)
+void StringListDestroy(StringList* list)
 {
-	if (list == NULL)
-		throw "List is NULL";
-	void** iterator = *list;
-	void** previous = NULL;
-	while (iterator != NULL)
-	{
-		if (strcmp((char*)iterator[0], str) == 0)
-		{
-			if (previous == NULL)
-			{
-				*list = (void**)iterator[1];
-				free(iterator[0]);
-				free(iterator);
-				iterator = *list;
-			}
-			else
-			{
-				previous[1] = iterator[1];
-				free(iterator[0]);
-				free(iterator);
-				iterator = (void**)previous[1];
-			}
-		}
-		else
-		{
-			previous = iterator;
-			iterator = (void**)iterator[1];
-		}
-	}
+    if (list == nullptr) return;
+
+    freeRecursive(*list);
+
+    *list = nullptr;
 }
 
-void PrintList(void** list)
+void StringListAdd(StringList list, const char* str)
 {
-	if (list == NULL)
-		return;
+    if (list == nullptr)
+        throw std::invalid_argument("List is not initialized");
 
-	void** iterator = list;
-	while (iterator != NULL)
-	{
-		printf("%s ", (char*)iterator[0]);
-		iterator = (void**)iterator[1];
-	}
-	printf("\n");
+    if (list[DATA] == nullptr)
+    {
+        list[DATA] = _strdup(str);
+        return;
+    }
+
+    StringList iterator = list;
+    while (iterator[NEXTPTR] != nullptr)
+    {
+        iterator = (StringList)iterator[NEXTPTR];
+    }
+
+    StringList next = (StringList)malloc(sizeof(void*) * 2);
+
+	if (next == nullptr)
+		throw std::bad_alloc();
+
+    next[DATA] = _strdup(str);
+    next[NEXTPTR] = nullptr;
+
+    iterator[NEXTPTR] = next;
 }
 
-int StringListSize(void** list)
+void StringListRemove(StringList* list, const char* str)
 {
-	int size = 0;
+    if (list == nullptr)
+        throw std::invalid_argument("List is nullptr");
 
-	void** iterator = list;
-	while (iterator != NULL)
-	{
-		size++;
-		iterator = (void**)iterator[1];
-	}
+    StringList iterator = *list;
+    StringList previous = nullptr;
 
-	return size;
+    while (iterator != nullptr)
+    {
+        if (strcmp((char*)iterator[DATA], str) == 0)
+        {
+            if (previous == nullptr)
+            {
+                *list = (StringList)iterator[NEXTPTR];
+                free(iterator[DATA]);
+                free(iterator);
+                iterator = *list;
+            }
+            else
+            {
+                previous[NEXTPTR] = iterator[NEXTPTR];
+                free(iterator[DATA]);
+                free(iterator);
+                iterator = (StringList)previous[NEXTPTR];
+            }
+        }
+        else
+        {
+            previous = iterator;
+            iterator = (StringList)iterator[NEXTPTR];
+        }
+    }
 }
 
-int StringListIndexOf(void** list, char* str)
+int StringListSize(StringList list)
 {
-	void** iterator = list;
-	int index = 0;
+    if (list == nullptr)
+        throw std::invalid_argument("List is nullptr");
 
-	while (iterator != NULL)
-	{
-		if (strcmp((char*)iterator[0], str) == 0)
-			return index;
-		index++;
-		iterator = (void**)iterator[1];
-	}
+    int size = 0;
 
-	return -1;
+    StringList iterator = list;
+    while (iterator != nullptr)
+    {
+        size++;
+        iterator = (StringList)iterator[NEXTPTR];
+    }
+
+    return size;
 }
 
-char* StringListGetElement(void** list, int index)
+int StringListIndexOf(StringList list, const char* str)
 {
-	void** iterator = list;
+    if (list == nullptr)
+        throw std::invalid_argument("List is nullptr");
 
-	for (size_t i = 0; i <= index; i++)
-	{
-		if (iterator == NULL)
-			return NULL;
+    StringList iterator = list;
+    int index = 0;
 
-		if (i == index)
-			return (char*)iterator[0];
-		
-		iterator = (void**)iterator[1];
-	}
+    while (iterator != nullptr)
+    {
+        if (strcmp((char*)iterator[DATA], str) == 0)
+            return index;
+        index++;
+        iterator = (StringList)iterator[NEXTPTR];
+    }
+
+    return -1;
 }
 
-void StringListRemoveDuplicates(void*** list)
+char* StringListGetElement(StringList list, int index)
 {
-	if (list == NULL)
-		throw "List is NULL";
+    if (list == nullptr)
+        throw std::invalid_argument("List is nullptr");
 
-	void** iterator = *list;
-	while (iterator != NULL)
-	{
-		void** innerIterator = (void**)iterator[1];
-		void** previous = iterator;
-		while (innerIterator != NULL)
-		{
-			if (strcmp((char*)iterator[0], (char*)innerIterator[0]) == 0)
-			{
-				previous[1] = innerIterator[1];
-				free(innerIterator[0]);
-				free(innerIterator);
-				innerIterator = (void**)previous[1];
-			}
-			else
-			{
-				previous = innerIterator;
-				innerIterator = (void**)innerIterator[1];
-			}
-		}
-		iterator = (void**)iterator[1];
-	}
+    StringList iterator = list;
+
+    for (size_t i = 0; i <= index; i++)
+    {
+        if (iterator == nullptr)
+            throw std::out_of_range("Index out of range");
+
+        if (i == index)
+            return (char*)iterator[DATA];
+
+        iterator = (StringList)iterator[NEXTPTR];
+    }
+
+	return nullptr;
 }
 
-void StringListReplaceInStrings(void** list, const char* before, const char* after)
+void StringListRemoveDuplicates(StringList* list)
 {
-	if (list == NULL)
-		throw "List is NULL";
+    if (list == nullptr)
+        throw std::invalid_argument("List is nullptr");
 
-	void** iterator = list;
-	while (iterator != NULL)
-	{
-		
-		if (char* subStrPosition = strstr((char*)iterator[0], before))
-		{
-			size_t newLength = strlen((char*)iterator[0]) - strlen(before) + strlen(after) + 1;
-			size_t prefixLength = subStrPosition - (char*)iterator[0];
-			size_t suffixLength = strlen(subStrPosition + strlen(before));
-
-
-			char* newString = (char*)malloc(newLength);
-			strncpy_s(newString, newLength, (char*)iterator[0], prefixLength);
-			strcat_s(newString, newLength, after);
-			strcat_s(newString, newLength, subStrPosition + strlen(before));
-			free(iterator[0]);
-			iterator[0] = newString;
-		}
-
-		iterator = (void**)iterator[1];
-	}
+    StringList iterator = *list;
+    while (iterator != nullptr)
+    {
+        StringList innerIterator = (StringList)iterator[NEXTPTR];
+        StringList previous = iterator;
+        while (innerIterator != nullptr)
+        {
+            if (strcmp((char*)iterator[DATA], (char*)innerIterator[DATA]) == 0)
+            {
+                previous[NEXTPTR] = innerIterator[NEXTPTR];
+                free(innerIterator[DATA]);
+                free(innerIterator);
+                innerIterator = (StringList)previous[NEXTPTR];
+            }
+            else
+            {
+                previous = innerIterator;
+                innerIterator = (StringList)innerIterator[NEXTPTR];
+            }
+        }
+        iterator = (StringList)iterator[NEXTPTR];
+    }
 }
 
-void StringListSort(void*** list)
+void StringListReplaceInStrings(StringList list, const char* before, const char* after)
 {
-	if (list == NULL)
-		throw "List is NULL";
-	
-	int listSize = StringListSize(*list);
-	
-	for (size_t i = 0; i < listSize - 1; i++)
-	{
-		void** iterator = *list;
-		void** previous = *list;
+    if (list == nullptr)
+        throw std::invalid_argument("List is nullptr");
 
-		for (size_t j = 0; j < listSize - i - 1; j++)
-		{
-			void** nextIterator = (void**)iterator[1];
+    StringList iterator = list;
+    while (iterator != nullptr)
+    {
+        if (char* subStrPosition = strstr((char*)iterator[DATA], before))
+        {
+            size_t newSubStrLength = strlen(after);
+			size_t oldSubStrLength = strlen(before);
+            size_t newLength = strlen((char*)iterator[DATA]) - oldSubStrLength + newSubStrLength + 1;
+            size_t prefixLength = subStrPosition - (char*)iterator[DATA];
+            size_t suffixLength = strlen(subStrPosition + oldSubStrLength);
 
-			if (strcmp((char*)iterator[0], (char*)(nextIterator[0])) > 0)
-			{
-				if(iterator == *list)
-				{
-					*list = nextIterator;
-					iterator[1] = nextIterator[1];
-					nextIterator[1] = iterator;
-					previous = nextIterator;
-				}
-				else
-				{
-					previous[1] = nextIterator;
-					iterator[1] = nextIterator[1];
-					nextIterator[1] = iterator;
-					previous = nextIterator;
-				}
+            char* newString = (char*)realloc((char*)iterator[DATA], newLength);
+			if (newString == nullptr)
+				throw std::bad_alloc();
 
-				iterator = (void**)nextIterator[1];
-			}
-			else
-			{
-				previous = iterator;
-				iterator = (void**)iterator[1];
-			}
-		}
-	}
+            memcpy(newString + (newLength - suffixLength - 1), newString + prefixLength + oldSubStrLength, suffixLength + 1);
+            memcpy(newString + prefixLength, after, newSubStrLength);
+			
+            iterator[DATA] = newString;
+        }
+
+        iterator = (StringList)iterator[NEXTPTR];
+    }
 }
 
+void StringListSort(StringList* list)
+{
+    if (list == nullptr)
+        throw std::invalid_argument("List is nullptr");
+
+    int listSize = StringListSize(*list);
+
+    for (size_t i = 0; i < listSize - 1; i++)
+    {
+        StringList iterator = *list;
+        StringList previous = *list;
+
+        for (size_t j = 0; j < listSize - i - 1; j++)
+        {
+            StringList nextIterator = (StringList)iterator[NEXTPTR];
+
+            if (strcmp((char*)iterator[DATA], (char*)(nextIterator[DATA])) > 0)
+            {
+                if (iterator == *list)
+                {
+                    *list = nextIterator;
+                    iterator[NEXTPTR] = nextIterator[NEXTPTR];
+                    nextIterator[NEXTPTR] = iterator;
+                    previous = nextIterator;
+                }
+                else
+                {
+                    previous[NEXTPTR] = nextIterator;
+                    iterator[NEXTPTR] = nextIterator[NEXTPTR];
+                    nextIterator[NEXTPTR] = iterator;
+                    previous = nextIterator;
+                }
+
+                iterator = (StringList)nextIterator[NEXTPTR];
+            }
+            else
+            {
+                previous = iterator;
+                iterator = (StringList)iterator[NEXTPTR];
+            }
+        }
+    }
+}
